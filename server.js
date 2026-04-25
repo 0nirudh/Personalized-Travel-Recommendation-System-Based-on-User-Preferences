@@ -61,6 +61,28 @@ app.delete('/api/destinations/:id', async (req, res) => {
   }
 });
 
+// API: Seed Database (for Cloud Deployment)
+app.get('/api/seed', async (req, res) => {
+  try {
+    const destinationsData = require('./data');
+    await Destination.deleteMany({});
+    const result = await Destination.insertMany(destinationsData);
+    
+    const indianCount = result.filter(d => d.country === 'India').length;
+    const internationalCount = result.length - indianCount;
+    
+    res.json({ 
+      message: '✅ Database successfully seeded!',
+      total: result.length,
+      indian: indianCount,
+      international: internationalCount
+    });
+  } catch (error) {
+    console.error('Seeding error:', error);
+    res.status(500).json({ error: 'Failed to seed database: ' + error.message });
+  }
+});
+
 // Main recommendation engine — now powered by MongoDB
 app.post('/recommendations', async (req, res) => {
   try {
