@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Wanderlust</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .particles-canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+    .login-page .container { position:relative; z-index:1; }
+
+    /* Password */
+    .password-wrapper { position:relative; }
+    .password-wrapper input { padding-right:48px; }
+    .toggle-password {
+      position:absolute; right:14px; top:50%; transform:translateY(-50%);
+      background:none; border:none; color:var(--text-faint);
+      cursor:pointer; font-size:1.1rem; padding:4px;
+    }
+    .toggle-password:hover { color:var(--accent-light); }
+    .strength-bar { height:4px; border-radius:2px; margin-top:8px; background:rgba(255,255,255,0.06); overflow:hidden; }
+    .strength-fill { height:100%; width:0; border-radius:2px; transition:width .4s, background .4s; }
+    .strength-text { font-size:.75rem; margin-top:4px; color:var(--text-faint); }
+
+    /* Typing */
+    .typing-text { font-family:var(--font-display); font-size:1.8rem; min-height:2.2em; }
+    .typing-cursor { display:inline-block; width:2px; height:1.2em; background:rgba(255,255,255,.7); margin-left:2px; animation:blink .7s step-end infinite; vertical-align:text-bottom; }
+    @keyframes blink { 50%{opacity:0;} }
+
+    /* Floating Icons */
+    .floating-icons { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+    .float-icon { position:absolute; font-size:1.4rem; opacity:.12; animation:floatUp linear infinite; }
+    @keyframes floatUp {
+      0%{transform:translateY(100%) rotate(0deg);opacity:0;} 10%{opacity:.12;} 90%{opacity:.12;}
+      100%{transform:translateY(-100vh) rotate(360deg);opacity:0;}
+    }
+
+    /* Divider */
+    .divider { display:flex; align-items:center; gap:16px; margin:28px 0 20px; color:var(--text-faint); font-size:.85rem; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .social-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .social-btn-login {
+      padding:12px; border-radius:10px; background:var(--bg-glass);
+      border:1px solid var(--border); color:var(--text-muted);
+      font-weight:600; cursor:pointer; transition:var(--transition);
+      font-family:var(--font); font-size:.9rem;
+    }
+    .social-btn-login:hover { border-color:var(--accent); color:var(--text); transform:translateY(-1px); }
+
+    /* ═══ CRAZY LOGIN ANIMATIONS ═══ */
+
+    /* Full-screen overlay */
+    .login-overlay {
+      position:fixed; inset:0; z-index:9999;
+      pointer-events:none; overflow:hidden;
+      opacity:0; transition:opacity .3s;
+    }
+    .login-overlay.active { opacity:1; }
+
+    /* Confetti */
+    .confetti {
+      position:absolute; width:10px; height:10px;
+      animation:confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform:translateY(-20px) rotate(0deg) scale(0); opacity:1; }
+      10%  { transform:translateY(-10px) rotate(45deg) scale(1); opacity:1; }
+      100% { transform:translateY(110vh) rotate(720deg) scale(0.5); opacity:0; }
+    }
+
+    /* Firework burst */
+    .firework {
+      position:absolute; width:6px; height:6px; border-radius:50%;
+      animation:fireworkBurst .8s ease-out forwards;
+    }
+    @keyframes fireworkBurst {
+      0%   { transform:translate(0,0) scale(1); opacity:1; }
+      100% { transform:translate(var(--tx), var(--ty)) scale(0); opacity:0; }
+    }
+
+    /* Ripple from button */
+    .ripple-ring {
+      position:fixed; border-radius:50%;
+      border:3px solid var(--accent);
+      animation:rippleExpand .8s ease-out forwards;
+      pointer-events:none;
+    }
+    @keyframes rippleExpand {
+      0%   { width:0; height:0; opacity:1; }
+      100% { width:600px; height:600px; opacity:0; margin:-300px 0 0 -300px; }
+    }
+
+    /* Shockwave */
+    .shockwave {
+      position:fixed; inset:0; z-index:9998;
+      pointer-events:none;
+      background:radial-gradient(circle at var(--cx) var(--cy), rgba(20,184,166,0.3) 0%, transparent 60%);
+      animation:shockwavePulse .6s ease-out forwards;
+    }
+    @keyframes shockwavePulse {
+      0%   { transform:scale(0); opacity:1; }
+      100% { transform:scale(3); opacity:0; }
+    }
+
+    /* Screen flash */
+    .screen-flash {
+      position:fixed; inset:0; z-index:9997;
+      background:#fff; pointer-events:none;
+      animation:flashPulse .4s ease-out forwards;
+    }
+    @keyframes flashPulse {
+      0%   { opacity:.6; }
+      100% { opacity:0; }
+    }
+
+    /* Success checkmark */
+    .success-badge {
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%) scale(0);
+      z-index:10000; pointer-events:none;
+      width:120px; height:120px; border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), #0d9488);
+      display:flex; align-items:center; justify-content:center;
+      font-size:3rem; color:#fff;
+      box-shadow:0 0 80px var(--accent-glow);
+      animation:badgePop .5s .3s cubic-bezier(.68,-.55,.27,1.55) forwards;
+    }
+    @keyframes badgePop {
+      0%   { transform:translate(-50%,-50%) scale(0) rotate(-180deg); }
+      100% { transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+    }
+
+    /* Star trails */
+    .star-trail {
+      position:absolute; font-size:1.5rem;
+      animation:starShoot 1s ease-out forwards;
+    }
+    @keyframes starShoot {
+      0%   { transform:translate(0,0) scale(1); opacity:1; }
+      100% { transform:translate(var(--sx), var(--sy)) scale(0); opacity:0; }
+    }
+
+    /* Button morphing during submit */
+    .submit-btn.submitting {
+      animation:btnPulseGlow .4s ease-in-out;
+    }
+    @keyframes btnPulseGlow {
+      0%   { box-shadow:0 0 20px var(--accent-glow); }
+      50%  { box-shadow:0 0 60px var(--accent-glow), 0 0 100px rgba(245,158,11,0.3); transform:scale(1.05); }
+      100% { box-shadow:0 0 20px var(--accent-glow); }
+    }
+  </style>
+</head>
+<body class="login-page">
+  <canvas class="particles-canvas" id="particlesCanvas"></canvas>
+  <div class="login-overlay" id="loginOverlay"></div>
+
+  <div class="container">
+    <header>
+      <h1>🌍 Wanderlust</h1>
+      <p class="subtitle">Your journey begins here</p>
+    </header>
+
+    <div class="form-container login-card">
+      <div class="login-panel">
+        <div class="panel-header">
+          <span class="eyebrow">Traveler Login</span>
+          <h2>Welcome back, explorer</h2>
+          <p class="panel-copy">Sign in to unlock personalized itineraries, curated destinations, and smart travel guidance.</p>
+        </div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-wrapper">
+              <input type="password" id="password" name="password" required placeholder="Enter your password">
+              <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+            </div>
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <div class="strength-text" id="strengthText"></div>
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="remember" id="remember"> Keep me signed in
+            </label>
+            <a href="#" class="forgot-link" onclick="forgotPassword();return false;">Forgot password?</a>
+          </div>
+          <button type="submit" class="submit-btn" id="loginBtn">✈️ Sign In to Wanderlust</button>
+        </form>
+
+        <div class="divider">or continue with</div>
+        <div class="social-grid">
+          <button class="social-btn-login" onclick="showMessage('Google login coming soon!','info')">🔍 Google</button>
+          <button class="social-btn-login" onclick="showMessage('GitHub login coming soon!','info')">🐙 GitHub</button>
+        </div>
+        <div class="auth-links auth-links-inline">
+          <p>New traveler? <a href="#" onclick="showSignup();return false;">Create a free account</a></p>
+        </div>
+      </div>
+
+      <aside class="login-hero">
+        <div class="floating-icons" id="floatingIcons"></div>
+        <div class="hero-badge">✈️</div>
+        <div class="typing-text" id="typingText"></div>
+        <p>Adventure, luxury, and seamless planning — all in one place.</p>
+        <ul class="hero-list">
+          <li>🧭 Personalized trip matches</li>
+          <li>🌏 50+ curated destinations</li>
+          <li>📅 Smart seasonal suggestions</li>
+          <li>💰 Budget-optimized plans</li>
+        </ul>
+        <div class="hero-image"></div>
+      </aside>
+    </div>
+
+    <div class="demo-notice login-demo">
+      <p>🎯 <strong>Demo Mode:</strong> Use any email and password to login.</p>
+    </div>
+  </div>
+
+  <script>
+    // ─── Particles ───
+    const canvas = document.getElementById('particlesCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+    resizeCanvas(); addEventListener('resize', resizeCanvas);
+
+    class Particle {
+      constructor(){ this.reset(); }
+      reset(){
+        this.x=Math.random()*canvas.width; this.y=Math.random()*canvas.height;
+        this.size=Math.random()*2+.5; this.speedX=(Math.random()-.5)*.4; this.speedY=(Math.random()-.5)*.4;
+        this.opacity=Math.random()*.4+.1; this.hue=Math.random()>.5?168:38;
+      }
+      update(){ this.x+=this.speedX; this.y+=this.speedY; if(this.x<0||this.x>canvas.width||this.y<0||this.y>canvas.height) this.reset(); }
+      draw(){ ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fillStyle=`hsla(${this.hue},70%,60%,${this.opacity})`; ctx.fill(); }
+    }
+    for(let i=0;i<60;i++) particles.push(new Particle());
+    function drawLines(){
+      for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y, d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){ ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(20,184,166,${.08*(1-d/120)})`; ctx.lineWidth=.5; ctx.stroke(); }
+      }
+    }
+    function animateParticles(){ ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update();p.draw();}); drawLines(); requestAnimationFrame(animateParticles); }
+    animateParticles();
+
+    // ─── Floating Icons ───
+    const icons=['✈️','🌍','🏔️','🏖️','🗺️','⛵','🌴','🎒','🧳','🌅'];
+    const fc=document.getElementById('floatingIcons');
+    icons.forEach((icon,i)=>{ const el=document.createElement('span'); el.className='float-icon'; el.textContent=icon;
+      el.style.left=Math.random()*90+'%'; el.style.animationDuration=(8+Math.random()*12)+'s'; el.style.animationDelay=i*1.5+'s'; fc.appendChild(el); });
+
+    // ─── Typing ───
+    const phrases=['Discover the world','Plan your dream trip','Travel without limits','Explore. Dream. Go.'];
+    let pI=0,cI=0,isDel=false; const tEl=document.getElementById('typingText');
+    function typeEffect(){
+      const cur=phrases[pI]; tEl.innerHTML=cur.substring(0,cI)+'<span class="typing-cursor"></span>';
+      if(!isDel&&cI<cur.length){cI++;setTimeout(typeEffect,70+Math.random()*40);}
+      else if(!isDel&&cI===cur.length){setTimeout(()=>{isDel=true;typeEffect();},2000);}
+      else if(isDel&&cI>0){cI--;setTimeout(typeEffect,35);}
+      else{isDel=false;pI=(pI+1)%phrases.length;setTimeout(typeEffect,400);}
+    }
+    typeEffect();
+
+    // ─── Password Toggle & Strength ───
+    document.getElementById('togglePassword').addEventListener('click',()=>{
+      const p=document.getElementById('password'); p.type=p.type==='password'?'text':'password';
+      document.getElementById('togglePassword').textContent=p.type==='password'?'👁️':'🙈';
+    });
+    document.getElementById('password').addEventListener('input',e=>{
+      const v=e.target.value,f=document.getElementById('strengthFill'),t=document.getElementById('strengthText');
+      let s=0; if(v.length>=6)s++; if(v.length>=10)s++; if(/[A-Z]/.test(v))s++; if(/[0-9]/.test(v))s++; if(/[^A-Za-z0-9]/.test(v))s++;
+      const l=[{w:'0%',c:'transparent',t:''},{w:'20%',c:'#ef4444',t:'Weak'},{w:'40%',c:'#f59e0b',t:'Fair'},
+        {w:'60%',c:'#f59e0b',t:'Good'},{w:'80%',c:'#14b8a6',t:'Strong'},{w:'100%',c:'#10b981',t:'Very Strong'}][s];
+      f.style.width=l.w; f.style.background=l.c; t.textContent=l.t; t.style.color=l.c;
+    });
+
+    // ═══════════════════════════════════════
+    //  CRAZY LOGIN ANIMATION SYSTEM
+    // ═══════════════════════════════════════
+
+    function getButtonCenter(){
+      const btn=document.getElementById('loginBtn');
+      const r=btn.getBoundingClientRect();
+      return { x:r.left+r.width/2, y:r.top+r.height/2 };
+    }
+
+    function spawnConfetti(count){
+      const overlay=document.getElementById('loginOverlay');
+      const colors=['#14b8a6','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#10b981','#f43f5e','#3b82f6'];
+      const shapes=['circle','square','triangle'];
+      for(let i=0;i<count;i++){
+        const el=document.createElement('div');
+        el.className='confetti';
+        const shape=shapes[Math.floor(Math.random()*shapes.length)];
+        const color=colors[Math.floor(Math.random()*colors.length)];
+        const size=6+Math.random()*10;
+        el.style.left=Math.random()*100+'%';
+        el.style.top='-20px';
+        el.style.width=size+'px'; el.style.height=size+'px';
+        el.style.background=color;
+        el.style.borderRadius=shape==='circle'?'50%':shape==='triangle'?'0':'3px';
+        if(shape==='triangle'){ el.style.background='transparent'; el.style.borderLeft=size/2+'px solid transparent'; el.style.borderRight=size/2+'px solid transparent'; el.style.borderBottom=size+'px solid '+color; el.style.width='0'; el.style.height='0'; }
+        el.style.animationDuration=(1.5+Math.random()*2)+'s';
+        el.style.animationDelay=(Math.random()*.5)+'s';
+        overlay.appendChild(el);
+        setTimeout(()=>el.remove(), 4000);
+      }
+    }
+
+    function spawnFireworks(cx,cy,count){
+      const overlay=document.getElementById('loginOverlay');
+      const colors=['#14b8a6','#f59e0b','#ec4899','#8b5cf6','#fbbf24','#06b6d4'];
+      for(let i=0;i<count;i++){
+        const el=document.createElement('div');
+        el.className='firework';
+        const angle=Math.random()*Math.PI*2;
+        const dist=80+Math.random()*160;
+        el.style.left=cx+'px'; el.style.top=cy+'px';
+        el.style.setProperty('--tx', Math.cos(angle)*dist+'px');
+        el.style.setProperty('--ty', Math.sin(angle)*dist+'px');
+        el.style.background=colors[Math.floor(Math.random()*colors.length)];
+        el.style.boxShadow='0 0 6px '+el.style.background;
+        el.style.animationDelay=(Math.random()*.2)+'s';
+        el.style.width=(4+Math.random()*4)+'px';
+        el.style.height=el.style.width;
+        overlay.appendChild(el);
+        setTimeout(()=>el.remove(), 1200);
+      }
+    }
+
+    function spawnRipples(cx,cy){
+      for(let i=0;i<3;i++){
+        const ring=document.createElement('div');
+        ring.className='ripple-ring';
+        ring.style.left=cx+'px'; ring.style.top=cy+'px';
+        ring.style.animationDelay=(i*.15)+'s';
+        ring.style.borderColor=['var(--accent)','var(--gold)','var(--pink)'][i];
+        document.body.appendChild(ring);
+        setTimeout(()=>ring.remove(), 1200);
+      }
+    }
+
+    function spawnShockwave(cx,cy){
+      const sw=document.createElement('div');
+      sw.className='shockwave';
+      sw.style.setProperty('--cx',cx+'px');
+      sw.style.setProperty('--cy',cy+'px');
+      document.body.appendChild(sw);
+      setTimeout(()=>sw.remove(),800);
+    }
+
+    function spawnFlash(){
+      const fl=document.createElement('div');
+      fl.className='screen-flash';
+      document.body.appendChild(fl);
+      setTimeout(()=>fl.remove(),500);
+    }
+
+    function spawnStars(cx,cy){
+      const overlay=document.getElementById('loginOverlay');
+      const stars=['⭐','✨','💫','🌟','⚡'];
+      for(let i=0;i<12;i++){
+        const el=document.createElement('div');
+        el.className='star-trail';
+        el.textContent=stars[Math.floor(Math.random()*stars.length)];
+        const angle=Math.random()*Math.PI*2;
+        const dist=100+Math.random()*200;
+        el.style.left=cx+'px'; el.style.top=cy+'px';
+        el.style.setProperty('--sx',Math.cos(angle)*dist+'px');
+        el.style.setProperty('--sy',Math.sin(angle)*dist+'px');
+        el.style.animationDelay=(Math.random()*.3)+'s';
+        overlay.appendChild(el);
+        setTimeout(()=>el.remove(),1500);
+      }
+    }
+
+    function spawnSuccessBadge(){
+      const badge=document.createElement('div');
+      badge.className='success-badge';
+      badge.textContent='✓';
+      document.body.appendChild(badge);
+      setTimeout(()=>badge.remove(),2500);
+    }
+
+    function triggerCrazyAnimation(){
+      const {x,y} = getButtonCenter();
+      const overlay=document.getElementById('loginOverlay');
+      overlay.classList.add('active');
+
+      // Sequence of crazy effects
+      spawnFlash();
+      spawnShockwave(x,y);
+      spawnRipples(x,y);
+
+      setTimeout(()=> spawnFireworks(x,y,40), 100);
+      setTimeout(()=> spawnConfetti(80), 200);
+      setTimeout(()=> spawnStars(x,y), 300);
+      setTimeout(()=> spawnFireworks(innerWidth*.3, innerHeight*.3, 25), 400);
+      setTimeout(()=> spawnFireworks(innerWidth*.7, innerHeight*.2, 25), 500);
+      setTimeout(()=> spawnSuccessBadge(), 400);
+      setTimeout(()=> spawnFireworks(innerWidth*.5, innerHeight*.6, 30), 700);
+      setTimeout(()=> spawnConfetti(60), 800);
+    }
+
+    // ─── Form Submit ───
+    document.getElementById('loginForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const email=document.getElementById('email').value;
+      const password=document.getElementById('password').value;
+      const btn=document.getElementById('loginBtn');
+
+      if(email && password){
+        btn.classList.add('submitting');
+        btn.innerHTML='🚀 Launching...';
+        btn.disabled=true;
+
+        localStorage.setItem('isLoggedIn','true');
+        localStorage.setItem('userEmail',email);
+
+        // Trigger the crazy animation!
+        setTimeout(()=> triggerCrazyAnimation(), 200);
+
+        showMessage('Login successful! Hold on tight... 🎉','success');
+
+        // Redirect after animations play
+        setTimeout(()=>{ window.location.href='/'; }, 2800);
+      } else {
+        showMessage('Please fill in all fields','error');
+      }
+    });
+
+    function showSignup(){ showMessage('Signup coming soon! Use demo login.','info'); }
+    function forgotPassword(){ showMessage('Password reset coming soon!','info'); }
+    function showMessage(msg,type){
+      const ex=document.querySelector('.message'); if(ex) ex.remove();
+      const d=document.createElement('div'); d.className='message '+type; d.textContent=msg;
+      document.querySelector('.login-panel').appendChild(d);
+      setTimeout(()=>{if(d.parentNode)d.remove();},3000);
+    }
+  </script>
+</body>
+</html>

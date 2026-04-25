@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wanderlust - Travel Recommendation System</title>
+  <meta name="description" content="Discover your perfect travel destination with Wanderlust.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ─── Landing Screen (not logged in) ─── */
+    .landing-screen {
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center;
+      padding:40px 24px; position:relative; overflow:hidden;
+    }
+
+    /* Orbiting rings */
+    .orbit-ring {
+      position:absolute; border-radius:50%;
+      border:1px solid rgba(20,184,166,0.08);
+      animation: orbitSpin linear infinite;
+    }
+    .orbit-ring:nth-child(1) { width:400px; height:400px; animation-duration:20s; }
+    .orbit-ring:nth-child(2) { width:600px; height:600px; animation-duration:30s; animation-direction:reverse; border-color:rgba(245,158,11,0.06); }
+    .orbit-ring:nth-child(3) { width:800px; height:800px; animation-duration:40s; border-color:rgba(236,72,153,0.05); }
+    .orbit-ring::after {
+      content:''; position:absolute; width:8px; height:8px;
+      border-radius:50%; top:-4px; left:50%;
+      background: var(--accent); box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .orbit-ring:nth-child(2)::after { background:var(--gold); box-shadow:0 0 12px var(--gold-glow); }
+    .orbit-ring:nth-child(3)::after { background:var(--pink); box-shadow:0 0 12px rgba(236,72,153,0.4); }
+    @keyframes orbitSpin { to { transform:rotate(360deg); } }
+
+    .landing-content { position:relative; z-index:2; }
+
+    .landing-logo {
+      font-size:5rem; margin-bottom:16px;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+    @keyframes logoFloat {
+      0%,100% { transform:translateY(0); }
+      50% { transform:translateY(-12px); }
+    }
+
+    .landing-title {
+      font-family: var(--font-display);
+      font-size:4.5rem; font-weight:700;
+      background: linear-gradient(135deg, var(--accent-light), var(--gold-light), var(--pink), var(--accent-light));
+      background-size:300% 300%;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      animation: gradientFlow 4s ease infinite;
+      margin-bottom:16px;
+    }
+    @keyframes gradientFlow {
+      0%   { background-position:0% 50%; }
+      50%  { background-position:100% 50%; }
+      100% { background-position:0% 50%; }
+    }
+
+    .landing-subtitle {
+      font-size:1.3rem; color:var(--text-muted);
+      max-width:500px; margin:0 auto 48px; line-height:1.7;
+    }
+
+    .login-cta {
+      position:relative; display:inline-flex; align-items:center; gap:12px;
+      padding:20px 48px;
+      font-size:1.2rem; font-weight:700; font-family:var(--font);
+      color:#fff; text-decoration:none;
+      background: linear-gradient(135deg, var(--accent), #0d9488);
+      border-radius:999px; border:none; cursor:pointer;
+      box-shadow: 0 0 40px var(--accent-glow), 0 8px 32px rgba(0,0,0,0.3);
+      transition: all .4s cubic-bezier(.4,0,.2,1);
+      overflow:hidden;
+    }
+    .login-cta::before {
+      content:''; position:absolute; inset:-2px;
+      border-radius:999px; padding:2px;
+      background: linear-gradient(135deg, var(--accent-light), var(--gold), var(--pink), var(--accent-light));
+      background-size:300% 300%;
+      animation: gradientFlow 3s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    .login-cta::after {
+      content:''; position:absolute; top:50%; left:50%;
+      width:0; height:0; border-radius:50%;
+      background:rgba(255,255,255,0.15);
+      transform:translate(-50%,-50%);
+      transition: width .6s, height .6s;
+    }
+    .login-cta:hover::after { width:300px; height:300px; }
+    .login-cta:hover {
+      transform:translateY(-4px) scale(1.05);
+      box-shadow: 0 0 60px var(--accent-glow), 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .login-cta .cta-arrow {
+      transition: transform .3s;
+    }
+    .login-cta:hover .cta-arrow { transform:translateX(4px); }
+
+    /* Pulsing glow behind button */
+    .cta-glow {
+      position:absolute; width:200px; height:200px;
+      border-radius:50%; filter:blur(60px); opacity:.3;
+      background: var(--accent);
+      animation: ctaPulse 2s ease-in-out infinite;
+      z-index:-1;
+    }
+    @keyframes ctaPulse {
+      0%,100% { transform:scale(1); opacity:.3; }
+      50% { transform:scale(1.3); opacity:.5; }
+    }
+
+    .landing-features {
+      display:flex; gap:32px; margin-top:64px;
+      flex-wrap:wrap; justify-content:center;
+    }
+    .landing-feat {
+      display:flex; align-items:center; gap:10px;
+      padding:12px 20px; border-radius:999px;
+      background:var(--bg-glass); border:1px solid var(--border);
+      color:var(--text-muted); font-size:.9rem; font-weight:500;
+      backdrop-filter:blur(8px);
+      animation: fadeUp .6s ease-out both;
+    }
+    .landing-feat:nth-child(1) { animation-delay:.3s; }
+    .landing-feat:nth-child(2) { animation-delay:.5s; }
+    .landing-feat:nth-child(3) { animation-delay:.7s; }
+    .landing-feat .feat-dot {
+      width:8px; height:8px; border-radius:50%;
+      background:var(--accent); box-shadow:0 0 8px var(--accent-glow);
+    }
+    .landing-feat:nth-child(2) .feat-dot { background:var(--gold); box-shadow:0 0 8px var(--gold-glow); }
+    .landing-feat:nth-child(3) .feat-dot { background:var(--pink); box-shadow:0 0 8px rgba(236,72,153,0.4); }
+
+    /* ─── Dashboard (logged in) ─── */
+    .dashboard { display:none; }
+    .dashboard.active { display:block; }
+
+    .hero-tagline {
+      display:inline-block; padding:6px 18px;
+      border-radius:999px; font-size:.85rem; font-weight:600;
+      background:rgba(20,184,166,0.12); border:1px solid rgba(20,184,166,0.25);
+      color:var(--accent-light); margin-bottom:20px;
+    }
+    .trip-card-badge {
+      position:absolute; top:16px; right:16px;
+      padding:4px 12px; border-radius:999px;
+      font-size:.75rem; font-weight:700;
+      background:rgba(20,184,166,0.15); color:var(--accent-light);
+      border:1px solid rgba(20,184,166,0.25);
+    }
+    .trip-card { position:relative; }
+    .feature-item .feature-icon {
+      width:56px; height:56px; margin:0 auto 20px;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:14px; font-size:1.6rem;
+      background:linear-gradient(135deg, rgba(20,184,166,0.15), rgba(245,158,11,0.1));
+      border:1px solid rgba(20,184,166,0.2);
+    }
+    .stat-item { position:relative; overflow:hidden; }
+    .stat-item::before {
+      content:''; position:absolute; top:-30px; right:-30px;
+      width:80px; height:80px; border-radius:50%;
+      background:rgba(20,184,166,0.06);
+    }
+    .cta-section {
+      text-align:center; padding:56px 40px;
+      background:var(--bg-card); border-radius:var(--radius-lg);
+      border:1px solid var(--border); box-shadow:var(--shadow);
+      margin-bottom:40px; position:relative; overflow:hidden;
+    }
+    .cta-section::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg, rgba(20,184,166,0.05), rgba(245,158,11,0.03));
+    }
+    .cta-section > * { position:relative; z-index:1; }
+    .cta-section h2 { font-family:var(--font-display); font-size:2rem; margin-bottom:12px; }
+    .cta-section p { color:var(--text-muted); margin-bottom:28px; max-width:500px; margin-left:auto; margin-right:auto; }
+    footer {
+      text-align:center; padding:32px 0; color:var(--text-faint); font-size:.85rem;
+      border-top:1px solid var(--border);
+    }
+    footer a { color:var(--accent); text-decoration:none; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════ LANDING (not logged in) ═══════ -->
+  <div class="landing-screen" id="landingScreen">
+    <div class="orbit-ring"></div>
+    <div class="orbit-ring"></div>
+    <div class="orbit-ring"></div>
+
+    <div class="landing-content">
+      <div class="landing-logo">🌍</div>
+      <h1 class="landing-title">Wanderlust</h1>
+      <p class="landing-subtitle">Your AI-powered travel companion. Discover perfect destinations tailored to your budget, interests, and season.</p>
+
+      <div style="position:relative; display:inline-block;">
+        <div class="cta-glow"></div>
+        <a href="/login" class="login-cta" id="loginCta">
+          ✈️ <span>Start Your Journey</span>
+          <span class="cta-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="landing-features">
+        <div class="landing-feat"><span class="feat-dot"></span> 50+ Destinations</div>
+        <div class="landing-feat"><span class="feat-dot"></span> Smart Matching</div>
+        <div class="landing-feat"><span class="feat-dot"></span> Budget Optimized</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ DASHBOARD (logged in) ═══════ -->
+  <div class="dashboard" id="dashboard">
+    <div class="container">
+      <header>
+        <h1>🌍 Wanderlust</h1>
+        <p class="subtitle">Your personalized travel companion</p>
+      </header>
+
+      <nav class="nav-buttons" id="navButtons">
+        <span class="welcome-msg" id="welcomeMsg"></span>
+        <a href="/national" class="nav-btn">🇮🇳 National</a>
+        <a href="/international" class="nav-btn">🌍 International</a>
+        <a href="#" onclick="logout()" class="nav-btn">🚪 Logout</a>
+      </nav>
+
+      <div class="hero-section">
+        <div class="hero-content">
+          <span class="hero-tagline">✨ AI-Powered Travel Planning</span>
+          <h2>Discover Your Perfect Destination</h2>
+          <p>Whether you're planning a domestic getaway or an international adventure, we match you with the ideal destination based on your preferences, budget, and travel season.</p>
+
+          <div class="trip-options">
+            <div class="trip-card">
+              <span class="trip-card-badge">15+ Cities</span>
+              <div class="trip-icon">🇮🇳</div>
+              <h3>National Trips</h3>
+              <p>Explore the incredible diversity and beauty of India — from the Himalayas to Kerala backwaters</p>
+              <a href="/national" class="trip-btn">Explore India →</a>
+            </div>
+            <div class="trip-card">
+              <span class="trip-card-badge">25+ Countries</span>
+              <div class="trip-icon">🌏</div>
+              <h3>International Trips</h3>
+              <p>Discover breathtaking destinations around the globe — from Paris to Bali and beyond</p>
+              <a href="/international" class="trip-btn">Explore World →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-section">
+        <h2>✨ Why Choose Wanderlust?</h2>
+        <div class="features-grid">
+          <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <h4>Smart Matching</h4>
+            <p>Our algorithm scores destinations against your interests, budget, and season</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">💰</div>
+            <h4>Budget-Optimized</h4>
+            <p>From backpacker adventures to luxury retreats within your budget</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📅</div>
+            <h4>Seasonal Intelligence</h4>
+            <p>We factor in weather and peak seasons for the best timing</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🎭</div>
+            <h4>Activity-Curated</h4>
+            <p>We match destinations to your ideal activities and interests</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <div class="stat-item"><div class="stat-number">50+</div><div class="stat-label">Destinations</div></div>
+        <div class="stat-item"><div class="stat-number">15</div><div class="stat-label">Indian States</div></div>
+        <div class="stat-item"><div class="stat-number">25+</div><div class="stat-label">Countries</div></div>
+        <div class="stat-item"><div class="stat-number">12</div><div class="stat-label">Activities</div></div>
+      </div>
+
+      <div class="cta-section">
+        <h2>Ready to explore? 🚀</h2>
+        <p>Start planning your next adventure today.</p>
+        <a href="/national" class="trip-btn">Start Planning →</a>
+      </div>
+
+      <footer>
+        <p>© 2026 Wanderlust · Built with ❤️ for travelers</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn) {
+      document.getElementById('landingScreen').style.display = 'none';
+      document.getElementById('dashboard').classList.add('active');
+      const email = localStorage.getItem('userEmail') || 'Explorer';
+      document.getElementById('welcomeMsg').textContent = `Welcome back, ${email.split('@')[0]}! 👋`;
+    }
+
+    function logout() {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userEmail');
+      location.reload();
+    }
+  </script>
+</body>
+</html>

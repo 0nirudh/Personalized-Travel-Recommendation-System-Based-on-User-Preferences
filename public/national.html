@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>National Trips - Wanderlust</title>
+  <meta name="description" content="Explore India's incredible diversity. Get personalized national travel recommendations based on your budget and interests.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-badge {
+      display:inline-block; padding:6px 18px; border-radius:999px;
+      font-size:.85rem; font-weight:600;
+      background:rgba(20,184,166,0.12); border:1px solid rgba(20,184,166,0.25);
+      color:var(--accent-light); margin-bottom:16px;
+    }
+    .form-container { position:relative; overflow:hidden; }
+    .form-container::before {
+      content:''; position:absolute; top:-100px; right:-100px;
+      width:250px; height:250px; border-radius:50%;
+      background:rgba(20,184,166,0.04); pointer-events:none;
+    }
+    .form-container::after {
+      content:''; position:absolute; bottom:-80px; left:-80px;
+      width:200px; height:200px; border-radius:50%;
+      background:rgba(245,158,11,0.03); pointer-events:none;
+    }
+    .form-container > * { position:relative; z-index:1; }
+    .form-header { text-align:center; margin-bottom:36px; }
+    .form-header h2 { font-family:var(--font-display); font-size:1.8rem; margin-bottom:8px; }
+    .form-header p { color:var(--text-muted); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
+    .destination-card { position:relative; overflow:hidden; }
+    .destination-card .match-badge {
+      position:absolute; top:16px; right:16px;
+      padding:4px 12px; border-radius:999px;
+      font-size:.75rem; font-weight:700;
+      background:rgba(16,185,129,0.2); color:#6ee7b7;
+      border:1px solid rgba(16,185,129,0.3);
+    }
+    .destination-card .match-badge.closest {
+      background:rgba(245,158,11,0.2); color:var(--gold-light);
+      border-color:rgba(245,158,11,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🇮🇳 National Trips</h1>
+      <p class="subtitle">Explore the incredible diversity of India</p>
+    </header>
+
+    <nav class="nav-buttons">
+      <a href="/" class="nav-btn">🏠 Home</a>
+      <a href="/international" class="nav-btn">🌍 International</a>
+    </nav>
+
+    <div class="form-container">
+      <div class="form-header">
+        <span class="page-badge">🧭 Find Your Indian Destination</span>
+        <h2>Tell us your preferences</h2>
+        <p>We'll match you with the perfect destinations across India</p>
+      </div>
+
+      <form id="recommendationForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="budget">💰 Budget (INR)</label>
+            <input type="number" id="budget" name="budget" required min="0" placeholder="e.g. 25000">
+          </div>
+          <div class="form-group">
+            <label for="groupType">👥 Trip for</label>
+            <select id="groupType" name="groupType" required>
+              <option value="single">Solo Traveler</option>
+              <option value="couple">Couple</option>
+              <option value="family">Family</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate">📅 Start Date</label>
+            <input type="date" id="startDate" name="startDate" required>
+          </div>
+          <div class="form-group">
+            <label for="endDate">📅 End Date</label>
+            <input type="date" id="endDate" name="endDate" required>
+          </div>
+        </div>
+
+        <div class="activities">
+          <h3>🎯 Preferred Activities</h3>
+          <div class="activity-grid">
+            <label class="activity-item"><input type="checkbox" name="activities" value="sightseeing"> 🏛️ Sightseeing</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="beach"> 🏖️ Beach</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="food"> 🍽️ Food</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="adventure"> 🏔️ Adventure</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="culture"> 🎭 Culture</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="shopping"> 🛍️ Shopping</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="relaxation"> 🧘 Relaxation</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="nature"> 🌿 Nature</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="spirituality"> 🕉️ Spirituality</label>
+            <label class="activity-item"><input type="checkbox" name="activities" value="history"> 📜 History</label>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">✨ Find My Indian Destination</button>
+      </form>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    document.getElementById('recommendationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const activities = formData.getAll('activities');
+      if (activities.length === 0) {
+        document.getElementById('results').innerHTML = `
+          <div class="no-results"><p>⚠️ Please select at least one activity to see matching destinations.</p></div>`;
+        return;
+      }
+
+      const data = {
+        budget: parseInt(formData.get('budget')),
+        startDate: formData.get('startDate'),
+        endDate: formData.get('endDate'),
+        activities,
+        tripType: 'national',
+        groupType: formData.get('groupType')
+      };
+
+      document.getElementById('results').innerHTML = `
+        <div class="loading"><div class="spinner"></div><p>Finding your perfect Indian destination...</p></div>`;
+
+      try {
+        const response = await fetch('/recommendations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const recommendations = await response.json();
+        displayResults(recommendations);
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('results').innerHTML = `
+          <div class="no-results"><p>❌ Sorry, there was an error. Please try again.</p></div>`;
+      }
+    });
+
+    function displayResults(recommendations) {
+      const resultsDiv = document.getElementById('results');
+      if (recommendations.length === 0) {
+        resultsDiv.innerHTML = `
+          <div class="no-results"><p>😔 No destinations match. Try adjusting your budget or activities!</p></div>`;
+        return;
+      }
+
+      const fallbackNote = recommendations.some(d => d.matchType === 'closest')
+        ? '<p class="match-note">🔎 Showing closest matches based on your budget, season, and travel style.</p>' : '';
+
+      resultsDiv.innerHTML = `
+        <div class="results-header">
+          <h2>🇮🇳 Your Perfect Indian Destinations</h2>
+          <p>Based on your preferences, here are ${recommendations.length} amazing options</p>
+          ${fallbackNote}
+        </div>
+        <div class="destinations-grid">
+          ${recommendations.map(dest => `
+            <div class="destination-card">
+              <span class="match-badge ${dest.matchType === 'closest' ? 'closest' : ''}">${dest.matchType === 'exact' ? '✓ Perfect Match' : '≈ Close Match'}</span>
+              <div class="destination-header">
+                <h3>${dest.name}</h3>
+                <div class="country">${dest.country}</div>
+              </div>
+              <div class="destination-content">
+                <p class="destination-description">${dest.description}</p>
+                <div class="destination-details">
+                  <div class="detail-item">
+                    <strong>Budget</strong>
+                    <span>₹${dest.budget.min.toLocaleString()} - ₹${dest.budget.max.toLocaleString()}</span>
+                  </div>
+                  <div class="detail-item">
+                    <strong>Activities</strong>
+                    <span>${dest.activities.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(', ')}</span>
+                  </div>
+                  <div class="detail-item">
+                    <strong>Best Seasons</strong>
+                    <span>${dest.seasons.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+
+      resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  </script>
+</body>
+</html>
